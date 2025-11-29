@@ -106,6 +106,7 @@ namespace GBF.Server.Controllers
             if (!TryGetUserId(out var userId))
                 return Unauthorized("Invalid or missing user ID.");
 
+
             var existing = await _db.AccountCollection
                 .FirstOrDefaultAsync(ac => ac.UserId == userId && ac.CharacterId == charId);
 

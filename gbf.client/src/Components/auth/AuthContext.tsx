@@ -12,7 +12,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
+const API = import.meta.env.VITE_API_URL;
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
 
@@ -25,7 +25,7 @@ useEffect(() => {
 }, []);
 
 const login = async (username: string, password: string) => {
-    const res = await fetch("api/db/login", {
+    const res = await fetch(`${API}api/db/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

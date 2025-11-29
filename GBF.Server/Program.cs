@@ -13,8 +13,11 @@ namespace GBF.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            //builder.Services.AddDbContext<GBFDbContext>(options =>
+            //    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionToGBFDB")));
+            //OLD DB
             builder.Services.AddDbContext<GBFDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionToGBFDB")));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -44,6 +47,8 @@ namespace GBF.Server
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Configuration.AddEnvironmentVariables();
+
 
 
 

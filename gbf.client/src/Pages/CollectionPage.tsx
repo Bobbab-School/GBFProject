@@ -1,6 +1,8 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../Components/auth/AuthContext";
 
+
+const API = import.meta.env.VITE_API_URL;
 type ApiCharacter = {
     charId?: number;
     CharId?: number;
@@ -63,7 +65,7 @@ export function CollectionPage() {
                 const headers: Record<string, string> = { "Accept": "application/json" };
                 if (user?.token) headers["Authorization"] = `Bearer ${user.token}`;
 
-                const res = await fetch("/api/collection/characters", {
+                const res = await fetch(`${API}/api/collection/characters`, {
                     method: "GET",
                     headers,
                     credentials: "include",
@@ -113,7 +115,7 @@ export function CollectionPage() {
         setCharacters(prev => prev.map(c => c.CharId === charId ? { ...c, Owned: !c.Owned } : c));
 
         try {
-            const res = await fetch(`/api/collection/toggle/${charId}`, {
+            const res = await fetch(`${API}/api/collection/awakening/${charId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.token}` },
             });
