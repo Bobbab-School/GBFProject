@@ -1,9 +1,7 @@
-
-using System;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GBF.Server
 {
@@ -13,35 +11,44 @@ namespace GBF.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            //builder.Services.AddDbContext<GBFDbContext>(options =>
-            //    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionToGBFDB")));
-            //OLD DB
-            builder.Services.AddDbContext<GBFDbContext>(options =>
-                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+            // PostgreSQL connection from environment variable
+            var connString = builder.Configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrEmpty(connString))
+            {
+                throw new Exception("DefaultConnection environment variable not set.");
+            }
 
+            builder.Services.AddDbContext<GBFDbContext>(options =>
+                options.UseNpgsql(connString, o =>
+                    o.EnableRetryOnFailure() // Optional: retry if transient failure
+                )
+            );
+
+            // JWT Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]))
-        };
-    });
+                .AddJwtBearer(options =>
+                {
+                    var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key)
+                    };
+                });
+
+            // CORS: allow your frontend on Render
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173")
+                    policy.WithOrigins("https://your-frontend.onrender.com")
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
             });
-
-            // Add services to the container.
 
             builder.Services.AddControllers();
             builder.Services.AddHttpContextAccessor();
@@ -49,21 +56,17 @@ namespace GBF.Server
             builder.Services.AddSwaggerGen();
             builder.Configuration.AddEnvironmentVariables();
 
-
-
-
             var app = builder.Build();
+
             app.UseCors("AllowFrontend");
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
 
             app.UseHttpsRedirection();
 
@@ -71,7 +74,6 @@ namespace GBF.Server
             app.UseAuthorization();
 
             app.MapControllers();
-
             app.MapFallbackToFile("/index.html");
 
             app.Run();
