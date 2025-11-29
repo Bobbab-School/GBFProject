@@ -44,9 +44,10 @@ namespace GBF.Server
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("https://gbfclient.onrender.com")
+                    policy.WithOrigins("https://gbfclient.onrender.com", "http://localhost:5173")
                           .AllowAnyHeader()
-                          .AllowAnyMethod();
+                          .AllowAnyMethod()
+                         .AllowCredentials();
                 });
             });
 
