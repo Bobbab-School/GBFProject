@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-const API = import.meta.env.VITE_API_URL;
 export const RegisterForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -9,6 +8,7 @@ export const RegisterForm = ({ onSuccess }: { onSuccess?: () => void }) => {
     const [error, setError] = useState("");
     const { login } = useAuth();
     const navigate = useNavigate();
+    const API = import.meta.env.VITE_API_URL || "https://gbfserver.onrender.com";
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

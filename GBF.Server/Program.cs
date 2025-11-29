@@ -44,7 +44,7 @@ namespace GBF.Server
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("https://your-frontend.onrender.com")
+                    policy.WithOrigins("https://gbfclient.onrender.com")
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
