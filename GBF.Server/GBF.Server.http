@@ -1,0 +1,79 @@
+@GBF.Server_HostAddress = https://localhost:7242
+
+
+POST {{GBF.Server_HostAddress}}/api/db/register
+Content-Type: application/json
+
+{
+  "Username":"Bobbab",
+  "Password":"test"
+}
+
+###
+
+POST {{GBF.Server_HostAddress}}/api/db/login
+Content-Type: application/json
+
+{
+  "Username":"Bobbab",
+  "Password":"admin"
+}
+
+###
+
+GET {{GBF.Server_HostAddress}}/api/users
+
+###
+
+
+###
+
+POST {{GBF.Server_HostAddress}}/api/db/login
+Content-Type: application/json
+
+{
+  //LoginDto
+}
+
+###
+
+POST {{GBF.Server_HostAddress}}/api/db/login
+Content-Type: application/json
+
+{
+  //LoginDto
+}
+
+###
+
+
+
+POST {{GBF.Server_HostAddress}}/api/db/login
+Content-Type: application/json
+
+{
+  //LoginDto
+}
+
+###
+
+GET {{GBF.Server_HostAddress}}/api/collection/characters
+
+###
+
+GET {{GBF.Server_HostAddress}}/api/collection/characters
+
+###
+
+GET {{GBF.Server_HostAddress}}/api/collection/characters
+
+###
+
+@charId=0
+POST {{GBF.Server_HostAddress}}/api/collection/toggle/{{charId}}
+
+###
+
+GET {{GBF.Server_HostAddress}}/api/collection/characters
+
+###
