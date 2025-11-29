@@ -3,11 +3,13 @@ using System.Data;
 using BCrypt.Net;
 using Microsoft.Data.SqlClient;
 using System.ComponentModel.DataAnnotations;
-
+using System.ComponentModel.DataAnnotations.Schema;
 
 public class User
 {
-	public int UserId { get; set; }
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int UserId { get; set; }
 	public string Username { get; set; }
 	public string PassHash { get; set; }
     public User()
@@ -29,11 +31,14 @@ public class AccountCollection
     public int Completion { get; set; }
 
     public GameCharacter Character { get; set; }
+    public User User { get; set; }
+   
 }
 
 public class GameCharacter
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int CharId { get; set; }
     public string Name { get; set; }
     public string Rarity { get; set; }
