@@ -105,61 +105,85 @@ export function CollectionPage() {
         });
     }, [characters, filterRarity, filterElement, search, showOwnedOnly]);
 
+    // Toggle character in collection (Add / Remove)
     const toggleCharacter = async (charId: number) => {
         if (!user?.token) return alert("Not logged in");
 
-        setCharacters(prev => prev.map(c => c.CharId === charId ? { ...c, Owned: !c.Owned } : c));
+        // Optimistic UI update
+        setCharacters(prev =>
+            prev.map(c => c.CharId === charId ? { ...c, Owned: !c.Owned } : c)
+        );
 
         try {
-            const headers: Record<string, string> = {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${user.token}`
-            };
-
-            const res = await fetch(`${API}/api/collection/awakening/${charId}`, {
+            const res = await fetch(`${API}/api/collection/toggle/${charId}`, {
                 method: "POST",
-                headers
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${user.token}`
+                },
             });
 
             if (!res.ok) throw new Error(await res.text());
+
             const body = await res.json().catch(() => ({}));
             const added = body.Added ?? body.added ?? null;
+
             if (added !== null) {
-                setCharacters(prev => prev.map(c => c.CharId === charId ? { ...c, Owned: Boolean(added) } : c));
+                setCharacters(prev =>
+                    prev.map(c => c.CharId === charId ? { ...c, Owned: Boolean(added) } : c)
+                );
             }
         } catch (err) {
             const error = err instanceof Error ? err : new Error(String(err));
             console.error("Collection error:", error);
             alert(error.message || "Could not update collection");
 
-            setCharacters(prev => prev.map(c => c.CharId === charId ? { ...c, Owned: !c.Owned } : c));
+            // revert UI
+            setCharacters(prev =>
+                prev.map(c => c.CharId === charId ? { ...c, Owned: !c.Owned } : c)
+            );
         }
     };
 
+    // Set Awakening Level
     const setAwakening = async (charId: number, level: number) => {
         if (!user?.token) return;
 
-        setCharacters(prev => prev.map(c => c.CharId === charId ? { ...c, Awakening: level } : c));
+        // Optimistic UI update
+        setCharacters(prev =>
+            prev.map(c => c.CharId === charId ? { ...c, Awakening: level } : c)
+        );
 
         try {
-            const headers: Record<string, string> = {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${user.token}`
-            };
             const res = await fetch(`${API}/api/collection/awakening/${charId}`, {
                 method: "POST",
-                headers,
-                body: JSON.stringify({ level }),
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${user.token}`
+                },
+                body: JSON.stringify({ level }) // required body
             });
 
             if (!res.ok) throw new Error(await res.text());
+
+            // Optionally, update from server response
+            const body = await res.json().catch(() => ({}));
+            const updatedLevel = body.Awakening ?? body.awakening ?? level;
+
+            setCharacters(prev =>
+                prev.map(c => c.CharId === charId ? { ...c, Awakening: updatedLevel } : c)
+            );
         } catch (err) {
             const error = err instanceof Error ? err : new Error(String(err));
             console.error("Set awakening error:", error);
             alert(error.message || "Failed to update awakening");
+
+            // Optionally, revert UI
+            setCharacters(prev =>
+                prev.map(c => c.CharId === charId ? { ...c, Awakening: 0 } : c)
+            );
         }
     };
-
     if (loading) return <p className="p-4">Loading characters...</p>;
     if (error) return <p className="p-4 text-red-600">Error: {error}</p>;
 
