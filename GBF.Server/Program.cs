@@ -75,7 +75,7 @@ namespace GBF.Server
 
 
             app.UseAuthentication();
-            app.UseAuthorization();
+  
 
             app.MapGet("/debug/connection", (GBFDbContext db) =>
             {
@@ -92,6 +92,7 @@ namespace GBF.Server
 
             app.UseStaticFiles();
             app.UseRouting();
+            app.UseAuthorization();
             app.MapControllers();
             app.MapFallbackToFile("index.html"); 
 
