@@ -18,7 +18,7 @@ const backendTarget = process.env.ASPNETCORE_HTTPS_PORT
 export default defineConfig({
     plugins: [plugin(), tailwindcss()],
     build: {
-        outDir: 'wwwroot',
+        outDir: 'dist',
     },
     resolve: {
         alias: {
