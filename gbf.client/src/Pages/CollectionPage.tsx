@@ -1,8 +1,8 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../Components/auth/AuthContext";
 
-
 const API = import.meta.env.VITE_API_URL;
+
 type ApiCharacter = {
     charId?: number;
     CharId?: number;
@@ -35,9 +35,8 @@ interface Character {
 export function CollectionPage() {
     const [characters, setCharacters] = useState<Character[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error] = useState<string>("");
+    const [error, setError] = useState<string>("");
 
-    // Filters
     const [search, setSearch] = useState("");
     const [filterRarity, setFilterRarity] = useState("");
     const [filterElement, setFilterElement] = useState("");
@@ -56,46 +55,37 @@ export function CollectionPage() {
         Awakening: a.awakening ?? 0,
     });
 
-    useEffect(() => {
-        // Fetching characters from the Controller
-        const fetchCharacters = async () => {
-            try {
-                setLoading(true);
+    const fetchCharacters = async () => {
+        try {
+            setLoading(true);
+            setError("");
 
-                // Prepare headers
-                const headers: Record<string, string> = { "Accept": "application/json" };
-                const fetchOptions: RequestInit = { method: "GET", headers };
+            const headers: Record<string, string> = { "Accept": "application/json" };
+            const options: RequestInit = { method: "GET", headers };
 
-                if (user?.token) {
-                    // Use token auth for logged-in users
-                    headers["Authorization"] = `Bearer ${user.token}`;
-                } else {
-                    //// No cookie support for guests yet
-                    fetchOptions.credentials = "include";
-                }
-
-                const res = await fetch(`${API}/api/collection/characters`, fetchOptions);
-
-                if (!res.ok) throw new Error(await res.text());
-
-                const raw: ApiCharacter[] = await res.json();
-                setCharacters(raw.map(normalize));
-
-            } catch (err) {
-                const error = err instanceof Error ? err : new Error(String(err));
-                console.error("Fetching Error:", error);
-                alert(error.message || "Failed to fetch characters");
-            } finally {
-                setLoading(false);
+            if (user?.token) {
+                headers["Authorization"] = `Bearer ${user.token}`;
+            } else {
+                options.credentials = "include"; // only for guests if backend uses cookies
             }
-        };
 
- 
+            const res = await fetch(`${API}/api/collection/characters`, options);
+            if (!res.ok) throw new Error(await res.text());
+            const raw: ApiCharacter[] = await res.json();
+            setCharacters(raw.map(normalize));
+        } catch (err) {
+            const error = err instanceof Error ? err : new Error(String(err));
+            console.error("Fetching Error:", error);
+            setError(error.message || "Failed to fetch characters");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchCharacters();
     }, [user?.token]);
 
-
-    //Filters
     const rarities = useMemo(
         () => Array.from(new Set(characters.map(c => c.Rarity.trim()))).filter(Boolean),
         [characters]
@@ -115,17 +105,20 @@ export function CollectionPage() {
         });
     }, [characters, filterRarity, filterElement, search, showOwnedOnly]);
 
-    // Toggle for adding characters to collection/db
     const toggleCharacter = async (charId: number) => {
         if (!user?.token) return alert("Not logged in");
 
-  
         setCharacters(prev => prev.map(c => c.CharId === charId ? { ...c, Owned: !c.Owned } : c));
 
         try {
+            const headers: Record<string, string> = {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${user.token}`
+            };
+
             const res = await fetch(`${API}/api/collection/awakening/${charId}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.token}` },
+                headers
             });
 
             if (!res.ok) throw new Error(await res.text());
@@ -139,26 +132,26 @@ export function CollectionPage() {
             console.error("Collection error:", error);
             alert(error.message || "Could not update collection");
 
-            // revert
             setCharacters(prev => prev.map(c => c.CharId === charId ? { ...c, Owned: !c.Owned } : c));
         }
     };
 
-    //Awakening level code
     const setAwakening = async (charId: number, level: number) => {
         if (!user?.token) return;
 
-        setCharacters(prev => {
-            return prev.map(c => c.CharId === charId ? { ...c, Awakening: level } : c);
-        });
-
+        setCharacters(prev => prev.map(c => c.CharId === charId ? { ...c, Awakening: level } : c));
 
         try {
+            const headers: Record<string, string> = {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${user.token}`
+            };
             const res = await fetch(`${API}/api/collection/awakening/${charId}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.token}` },
+                headers,
                 body: JSON.stringify({ level }),
             });
+
             if (!res.ok) throw new Error(await res.text());
         } catch (err) {
             const error = err instanceof Error ? err : new Error(String(err));
@@ -169,12 +162,10 @@ export function CollectionPage() {
 
     if (loading) return <p className="p-4">Loading characters...</p>;
     if (error) return <p className="p-4 text-red-600">Error: {error}</p>;
-    //HTML
+
     return (
         <div className="p-5">
             <h1 className="text-2xl font-bold mb-4">Collection</h1>
-
-            {/* Filters */}
             <div className="flex gap-3 mb-4 flex-wrap items-center">
                 <input
                     value={search}
@@ -182,7 +173,6 @@ export function CollectionPage() {
                     placeholder="Search name..."
                     className="border p-1 rounded"
                 />
-
                 <select
                     value={filterRarity}
                     onChange={e => setFilterRarity(e.target.value)}
@@ -191,7 +181,6 @@ export function CollectionPage() {
                     <option value="">All Rarities</option>
                     {rarities.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
-
                 <select
                     value={filterElement}
                     onChange={e => setFilterElement(e.target.value)}
@@ -200,14 +189,12 @@ export function CollectionPage() {
                     <option value="">All Elements</option>
                     {elements.map(el => <option key={el} value={el}>{el}</option>)}
                 </select>
-
                 <button
                     onClick={() => { setSearch(""); setFilterElement(""); setFilterRarity(""); }}
                     className="bg-red-500 text-white px-4 rounded"
                 >
                     Clear
                 </button>
-
                 <button
                     onClick={() => setShowOwnedOnly(prev => !prev)}
                     className={`px-3 py-1 rounded text-white transition
@@ -215,23 +202,17 @@ export function CollectionPage() {
                 >
                     Owned Only
                 </button>
-
             </div>
-
-            {/* Character grid */}
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                 {filtered.map(c => (
-                   <div className = {`border-4 rounded p-2 ${c.Owned ? "bg-green-100 border-green-400" : "bg-white border-purple-500"}`} >
-
+                    <div key={c.CharId} className={`border-4 rounded p-2 ${c.Owned ? "bg-green-100 border-green-400" : "bg-white border-purple-500"}`}>
                         <a href={c.CharUrl} target="_blank" rel="noopener noreferrer" className="block mb-2">
-                            <div className="w-full h-32 bg-gray-200 flex items-center justify-center rounded mb-2"> {/* wanted to have the character icons here, but it ended up being a bit to hard to collect them in a smart way */}
+                            <div className="w-full h-32 bg-gray-200 flex items-center justify-center rounded mb-2">
                                 <span className="text-gray-600 text-sm">Open Wiki</span>
                             </div>
                         </a>
-
                         <p className="text-center font-semibold">{c.Name}</p>
                         <p className="text-xs text-gray-600 text-center">{c.Rarity.trim()} | {c.Element}</p>
-
                         <div className="mt-2">
                             <button
                                 onClick={() => toggleCharacter(c.CharId)}
@@ -240,7 +221,6 @@ export function CollectionPage() {
                                 {c.Owned ? "Remove" : "Add"}
                             </button>
                         </div>
-
                         {c.Owned && (
                             <div className="mt-2 flex justify-center gap-1">
                                 {Array.from({ length: 5 }, (_, i) => (
