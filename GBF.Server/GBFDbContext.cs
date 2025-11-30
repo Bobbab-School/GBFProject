@@ -34,9 +34,11 @@ namespace GBF.Server
                 .HasForeignKey(ac => ac.CharacterId);
 
             modelBuilder.Entity<AccountCollection>()
-                .HasOne<User>()
-                .WithMany()
-                .HasForeignKey(ac => ac.UserId);
+                .HasOne(ac => ac.User)
+                .WithMany() // or .WithMany(u => u.AccountCollections) if navigation added
+                .HasForeignKey(ac => ac.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }
