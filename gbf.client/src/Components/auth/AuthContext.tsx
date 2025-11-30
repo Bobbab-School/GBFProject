@@ -26,7 +26,7 @@ useEffect(() => {
 }, []);
 
 const login = async (username: string, password: string) => {
-    const res = await fetch(`${API}api/db/login`, {
+    const res = await fetch(`${API}/api/db/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
