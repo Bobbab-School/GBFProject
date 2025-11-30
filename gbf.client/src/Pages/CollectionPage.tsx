@@ -62,18 +62,25 @@ export function CollectionPage() {
             try {
                 setLoading(true);
 
+                // Prepare headers
                 const headers: Record<string, string> = { "Accept": "application/json" };
-                if (user?.token) headers["Authorization"] = `Bearer ${user.token}`;
+                const fetchOptions: RequestInit = { method: "GET", headers };
 
-                const res = await fetch(`${API}/api/collection/characters`, {
-                    method: "GET",
-                    headers,
-                    credentials: "include",
-                });
+                if (user?.token) {
+                    // Use token auth for logged-in users
+                    headers["Authorization"] = `Bearer ${user.token}`;
+                } else {
+                    //// No cookie support for guests yet
+                    fetchOptions.credentials = "include";
+                }
+
+                const res = await fetch(`${API}/api/collection/characters`, fetchOptions);
 
                 if (!res.ok) throw new Error(await res.text());
-                const raw = await res.json();
+
+                const raw: ApiCharacter[] = await res.json();
                 setCharacters(raw.map(normalize));
+
             } catch (err) {
                 const error = err instanceof Error ? err : new Error(String(err));
                 console.error("Fetching Error:", error);
@@ -82,6 +89,7 @@ export function CollectionPage() {
                 setLoading(false);
             }
         };
+
  
         fetchCharacters();
     }, [user?.token]);
