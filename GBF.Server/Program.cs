@@ -77,6 +77,19 @@ namespace GBF.Server
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.MapGet("/debug/connection", (GBFDbContext db) =>
+            {
+                try
+                {
+                    db.Database.OpenConnection();
+                    return "Connected!";
+                }
+                catch (Exception ex)
+                {
+                    return ex.ToString();
+                }
+            });
+
             app.MapControllers();
             app.MapFallbackToFile("/index.html");
 
