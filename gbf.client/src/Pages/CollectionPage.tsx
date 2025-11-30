@@ -146,7 +146,7 @@ export function CollectionPage() {
 
 
         try {
-            const res = await fetch(`/api/collection/awakening/${charId}`, {
+            const res = await fetch(`${API}/api/collection/awakening/${charId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.token}` },
                 body: JSON.stringify({ level }),
