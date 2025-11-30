@@ -17,6 +17,9 @@ const backendTarget = process.env.ASPNETCORE_HTTPS_PORT
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [plugin(), tailwindcss()],
+    build: {
+        outDir: 'wwwroot',
+    },
     resolve: {
         alias: {
             '@': fileURLToPath(new URL('./src', import.meta.url))
